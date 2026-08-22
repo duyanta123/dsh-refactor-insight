@@ -1,0 +1,61 @@
+{
+  "name": "dsh-refactor-insight",
+  "version": "0.1.0",
+  "description": "DSH refactor-insight skill plugin: turn codebase smells into an executable, priority-ordered refactoring plan (file-length, long-function, deep-nesting, god-object, high-coupling, and TODO-density heuristics plus a staged runbook).",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duyanta123/dsh-refactor-insight.git"
+  },
+  "bugs": {
+    "url": "https://github.com/duyanta123/dsh-refactor-insight/issues"
+  },
+  "homepage": "https://github.com/duyanta123/dsh-refactor-insight#readme",
+  "scripts": {
+    "test": "node --test test/refactor-smell.test.mjs"
+  },
+  "main": "./plugin/index.js",
+  "exports": {
+    ".": "./plugin/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "plugin/index.js",
+    "cordis.patch.yml",
+    "skills/",
+    "docs/",
+    "scripts/",
+    "README.md",
+    "CHANGELOG.md",
+    "PUBLISHING.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/dsh-skill-filesystem": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-skill-filesystem": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "refactor",
+    "code-quality",
+    "smell",
+    "technical-debt",
+    "code-review",
+    "skills"
+  ]
+}
