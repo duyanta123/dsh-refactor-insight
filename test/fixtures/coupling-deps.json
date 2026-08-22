@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "internal": [
+      { "source": "core", "target": "libA", "kind": "import", "path": "src/core/index.js" },
+      { "source": "core", "target": "libB", "kind": "import", "path": "src/core/index.js" },
+      { "source": "core", "target": "libC", "kind": "import", "path": "src/core/index.js" },
+      { "source": "core", "target": "libD", "kind": "import", "path": "src/core/index.js" },
+      { "source": "libB", "target": "libC", "kind": "import", "path": "src/libB/index.js" },
+      { "source": "libC", "target": "libB", "kind": "import", "path": "src/libC/index.js" }
+    ],
+    "external": []
+  }
+}
