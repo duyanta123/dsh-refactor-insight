@@ -1,0 +1,6 @@
+{
+  "name": "node-app",
+  "version": "0.1.0",
+  "description": "refactor-smell node fixture",
+  "type": "module"
+}
