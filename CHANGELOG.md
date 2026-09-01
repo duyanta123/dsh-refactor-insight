@@ -2,7 +2,7 @@
 
 本文件记录 dsh-refactor-insight 的变更，遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [0.1.1] - 2026-09-02
 
 ### 新增
 - 脚手架：`package.json` + `cordis.patch.yml` + `plugin/index.js` + `.github/workflows/ci.yml`（ubuntu + windows × Node 18/22）。
