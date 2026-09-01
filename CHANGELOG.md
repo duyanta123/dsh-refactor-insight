@@ -2,6 +2,11 @@
 
 本文件记录 dsh-refactor-insight 的变更，遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+- `prepublishOnly` 钩子：npm 发布前自动运行测试门禁。
+
 ## [0.1.1] - 2026-09-02
 
 ### 新增

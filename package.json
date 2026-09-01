@@ -16,7 +16,8 @@
   },
   "homepage": "https://github.com/duyanta123/dsh-refactor-insight#readme",
   "scripts": {
-    "test": "node --test test/refactor-smell.test.mjs"
+    "test": "node --test test/refactor-smell.test.mjs",
+    "prepublishOnly": "npm test"
   },
   "main": "./plugin/index.js",
   "exports": {
