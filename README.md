@@ -31,6 +31,8 @@ DSH 技能插件：把代码库的坏味道转成**带定位、优先级和依�
 
 **只跑诊断 CLI（零依赖，不经过 DSH 也能跑）**
 
+独立 `refactor-smell.mjs` 与 `arch-profile.mjs` 继续支持 Node.js >= 18；作为 DSH 0.1.2-rc.1 bundle 运行时要求 Node.js >= 22.12。兼容门禁可用 `npm run test:compat`。
+
 ```bash
 # 六条规则诊断
 node scripts/refactor-smell.mjs <repo_path>

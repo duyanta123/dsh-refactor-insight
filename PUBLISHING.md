@@ -6,6 +6,7 @@
 - [ ] `node --check scripts/refactor-smell.mjs` 通过
 - [ ] `node --check scripts/arch-profile.mjs` 通过
 - [ ] `node --check plugin/index.js` 通过
+- [ ] `npm run test:compat` 通过（DSH 0.1.2-rc.1 / Node 22.12+；临时 profile add、dump-config、启动 smoke test）
 - [ ] `npm pack --dry-run` 通过
 - [ ] README / CHANGELOG / `docs/refactor-plan-template.md` / `skills/refactor-runbook/SKILL.md` 已同步本轮变更
 - [ ] `package.json` 版本号已按 semver 更新
@@ -30,6 +31,8 @@ gh release create v0.1.0 --title v0.1.0 --notes "See CHANGELOG.md"
 # 4. 安装验证
 dsh plugin --profile web add github:duyanta123/dsh-refactor-insight#v0.1.0
 ```
+
+既有 Node 18/22 CI 仅代表独立诊断脚本回归；最新 DSH 0.1.2-rc.1 宿主要求 Node >=22.12。
 
 ## Distribution
 

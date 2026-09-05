@@ -35,7 +35,8 @@ dsh-refactor-insight/
 ├── test/
 │   ├── fixtures/{python-app,node-app,go-app}/   # 各语言植入已知坏味道
 │   └── refactor-smell.test.mjs                 # 契约测试（spawnSync 模式照抄 arch-doc）
-├── .github/workflows/ci.yml     # ubuntu+windows × Node 18/22（照抄 arch-doc）
+├── test/dsh-compat.test.mjs                    # DSH 0.1.2-rc.1 宿主门禁
+├── .github/workflows/ci.yml     # 独立脚本回归 Node 18/22 + DSH compat Node 22.12
 ├── package.json / CHANGELOG.md / README.md / LICENSE / PUBLISHING.md
 ```
 
@@ -73,7 +74,8 @@ dsh-refactor-insight/
 ## 7. 发布与分发
 
 - 打包骨架照 arch-doc：`dsh.bundle.patch` + `files` 字段 + optional peerDependencies。
-- `ci.yml` 照 arch-doc（Node 18/22 × ubuntu/windows），满足收录 CI 门槛。
+- `ci.yml` 保留 Node 18/22 独立脚本回归，并增加固定 Node 22.12 的 DSH compat job。
+- `npm run test:compat` 固定 `@deepseek-ai/dsh@0.1.2-rc.1`，完成 add、dump-config 与有限时长启动验收。
 - 分发：`dsh-plugin` topic + MIT → awesome-dsh-plugin 的 data YAML（**Git & Engineering / Code Review 分类**）+ awesome-deepseek-harness 条目 + Oh-My-DSH 自动同步。
 - 对外定位语：`Turn codebase smells into an executable, priority-ordered refactoring plan.`
 

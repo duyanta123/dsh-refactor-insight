@@ -24,7 +24,21 @@ jobs:
         run: node --check scripts/arch-profile.mjs
       - name: Syntax check (plugin entry)
         run: node --check plugin/index.js
-      - name: Run refactor-smell contract tests
+      - name: Independent script regression
         run: npm test
       - name: Validate package contents
         run: npm pack --dry-run
+
+  compat:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+      - name: DSH 0.1.2-rc.1 compatibility
+        run: npm run test:compat
