@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-4c1d95)](https://github.com/topics/dsh-plugin)
-[![version](https://img.shields.io/badge/version-0.1.1-green)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.1.2-green)](CHANGELOG.md)
 
 DSH 技能插件：把代码库的坏味道转成**带定位、优先级和依赖顺序的可执行重构计划**——结构健康体检，而非 diff 审查。
 

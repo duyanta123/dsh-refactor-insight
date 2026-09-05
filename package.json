@@ -1,6 +1,6 @@
 {
   "name": "dsh-refactor-insight",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DSH refactor-insight skill plugin: turn codebase smells into an executable, priority-ordered refactoring plan (file-length, long-function, deep-nesting, god-object, high-coupling, and TODO-density heuristics plus a staged runbook).",
   "license": "MIT",
   "type": "module",
