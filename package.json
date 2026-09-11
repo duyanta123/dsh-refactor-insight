@@ -37,6 +37,7 @@
     "docs/",
     "scripts/",
     "README.md",
+    "README.zh-CN.md",
     "CHANGELOG.md",
     "PUBLISHING.md",
     "LICENSE"

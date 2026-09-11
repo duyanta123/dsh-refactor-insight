@@ -35,7 +35,7 @@ dsh-refactor-insight/
 ├── test/
 │   ├── fixtures/{python-app,node-app,go-app}/   # 各语言植入已知坏味道
 │   └── refactor-smell.test.mjs                 # 契约测试（spawnSync 模式照抄 arch-doc）
-├── test/dsh-compat.test.mjs                    # DSH 0.1.2-rc.1 宿主门禁
+├── test/dsh-compat.test.mjs                    # DSH 0.1.5-rc.2 宿主门禁
 ├── .github/workflows/ci.yml     # 独立脚本回归 Node 18/22 + DSH compat Node 22.19
 ├── package.json / CHANGELOG.md / README.md / LICENSE / PUBLISHING.md
 ```
@@ -75,7 +75,7 @@ dsh-refactor-insight/
 
 - 打包骨架照 arch-doc：`dsh.bundle.patch` + `files` 字段 + optional peerDependencies。
 - `ci.yml` 保留 Node 18/22 独立脚本回归，并增加固定 Node 22.19 的 DSH compat job。
-- `npm run test:compat` 固定 `@deepseek-ai/dsh@0.1.2-rc.1`，完成 add、dump-config 与有限时长启动验收。
+- `npm run test:compat` 固定 `@deepseek-ai/dsh@0.1.5-rc.2`，完成 add、dump-config 与有限时长启动验收。
 - 分发：`dsh-plugin` topic + MIT → awesome-dsh-plugin 的 data YAML（**Git & Engineering / Code Review 分类**）+ awesome-deepseek-harness 条目 + Oh-My-DSH 自动同步。
 - 对外定位语：`Turn codebase smells into an executable, priority-ordered refactoring plan.`
 
@@ -86,12 +86,12 @@ dsh-refactor-insight/
 3. [x] 函数/类级规则（2、4）+ 各语言 fixture + 测试
 4. [x] 模块耦合规则（5）+ deps 复用 + 测试
 5. [x] runbook SKILL.md + 报告模板
-6. [ ] 发布（tag v0.1.0）+ 列表 PR
+6. [x] 发布（v0.1.0 首发，当前 v0.1.3）+ 列表 PR
 
 ## 9. 验收标准（Definition of Ready）
 
 - [x] `node --test test/refactor-smell.test.mjs` 全部通过（25 例）
 - [x] 六条规则在三种语言 fixture 上输出位置与数量精确匹配（含高耦合 deps 复用/环检测）
 - [x] runbook 可用且只读不改码
-- [ ] `dsh plugin --profile web add github:duyanta123/dsh-refactor-insight` 可安装并注册技能（发布后验证）
-- [ ] CI 全绿；发布 tag v0.1.0
+- [x] `dsh plugin --profile web add github:duyanta123/dsh-refactor-insight` 可安装并注册技能（发布后已验证）
+- [x] CI 全绿；发布 tag（v0.1.0 首发，当前 v0.1.3）
