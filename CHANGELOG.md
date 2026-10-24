@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-24
+
+### 变更
+- DSH 宿主兼容基线从 `0.1.5-rc.2` 迁移到 `0.2.1-rc.2`：`test/dsh-compat.test.mjs` 固定安装 `@deepseek-ai/dsh@0.2.1-rc.2` + 同版本 `@deepseek-ai/dsh-skill-filesystem`，CI compat job 步骤名与全部文档基线引用同步（Node >=22.19 要求不变，本机 Windows / Node 22.21 实测 `npm run test:compat` 通过）。
+- 文档勘误：两处输出字段契约清单（`PLUGIN-MAINTENANCE.md` §5.3、开发计划 §10）按脚本实际输出重写——god-object 无 `lines` 字段、deep-nesting/long-function/god-object/high-coupling 补列 `threshold`、Go 接收者分支无 `class_lines`；开发计划 §9 用例数 25 → 27；`PUBLISHING.md` §5 安装验证的技能名改为 frontmatter `name`（`refactor-insight`，技能目录仍为 `refactor-runbook`）；awesome-dsh-plugin 收录分类按 upstream 实际修正为 `category: dev`（无「/ Code Review」子分类），开发计划 §7 同步。
+- 测试补契约断言：god-object 不输出 `lines` 字段、Go 接收者分支无 `class_lines`（god-object 默认 `threshold` 为 10），用例数不变（27 例）。
+- 规则 6（TODO/FIXME 密度）输出新增 `line` 字段（首个标记行号），兑现开发计划 §4「文件:行」定位承诺；脚本用法说明移除从未被解析的 `--all`（脚本本就恒跑全部规则，行为无变化）。
+- 修正 python/node fixture 头注释（"Deep-plus-todo fixture" 字样）被大小写不敏感的标记模式误计为坏味道的问题；修正后各 fixture 的标记数即真实植入数。
+- 测试从 25 例扩到 27 例：六条规则在三种语言 fixture 上改为精确值断言（长函数体 99/88/88 行、深嵌套 7/6/7 层、TODO 标记 1/2/2 处及首行号 7/2/5、上帝对象方法数 12/12/11、类体 38/49 行），补齐 node/go 的语言探测与 TODO 密度断言，并新增默认阈值用例（400 行 file-length、300 行类体 god-object，经临时目录构造，不再依赖降阈值触发）。
+- 文档同步：开发计划补「v0.1.3 实际实现口径」注记（实际输出字段名、规则 4 类体行数语义、runbook 阶段 1 仅用 `--probe`/`--deps`、无 `--all`）并修正 §5/§6 原文；`PLUGIN-MAINTENANCE.md` §5.3 输出字段契约改为脚本实际字段；`PUBLISHING.md` npm 发布步骤对齐 tag 触发的 OIDC trusted publishing 工作流（`.github/workflows/publish.yml`），手动 `npm publish` 降为兜底；双语 README 移除不存在的 `evidence` 字段表述。
+
 ## [0.1.3] - 2026-09-11
 
 ### 变更

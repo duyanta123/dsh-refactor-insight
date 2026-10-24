@@ -5,7 +5,7 @@ English | [简体中文](README.zh-CN.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-4c1d95)](https://github.com/topics/dsh-plugin)
 [![CI](https://github.com/duyanta123/dsh-refactor-insight/actions/workflows/ci.yml/badge.svg)](https://github.com/duyanta123/dsh-refactor-insight/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.1.3-green)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.2.0-green)](CHANGELOG.md)
 
 A DSH skill plugin: turns codebase smells into an **executable refactoring plan with locations, priorities, and dependency ordering** — a structural health check, not a diff review.
 
@@ -32,14 +32,14 @@ Six deterministic smell rules (zero-dependency heuristics):
 - **Deep nesting** (default max indent / brace depth > 5)
 - **God objects** (> 10 class methods or class body > 300 lines / Go receiver method count)
 - **Highly coupled modules** (reuses `arch-profile --deps` output; hub modules by in/out degree + Tarjan cycle detection)
-- **TODO/FIXME density** (noise metric, reported per 1k lines)
+- **TODO/FIXME density** (noise metric, reported per 1k lines plus the first marker line)
 
 ## Installation
 
 As a DSH plugin (recommended):
 
 ```bash
-dsh plugin --profile web add "github:duyanta123/dsh-refactor-insight#v0.1.3"
+dsh plugin --profile web add "github:duyanta123/dsh-refactor-insight#v0.2.0"
 ```
 
 Or from npm:
@@ -48,7 +48,7 @@ Or from npm:
 npm install dsh-refactor-insight
 ```
 
-Compatibility tiers: the standalone diagnostic scripts (`refactor-smell.mjs` / `arch-profile.mjs`) run on Node.js >= 18; as a DSH 0.1.5-rc.2 plugin it is verified with Node.js >= 22.19. Run `npm run test:compat` to execute an isolated-profile add, dump-config, and startup smoke test.
+Compatibility tiers: the standalone diagnostic scripts (`refactor-smell.mjs` / `arch-profile.mjs`) run on Node.js >= 18; as a DSH 0.2.1-rc.2 plugin it is verified with Node.js >= 22.19. Run `npm run test:compat` to execute an isolated-profile add, dump-config, and startup smoke test.
 
 Local development: add `"dsh-refactor-insight": "file:<local-path>/dsh-refactor-insight"` to the profile's package.json and `"dsh-refactor-insight"` to the bundles array.
 
@@ -126,10 +126,10 @@ Sample output (excerpt):
 That rule needs a dependency graph as input: run `node scripts/arch-profile.mjs <repo_path> --deps > deps.json` first, then pass it via `--deps-json deps.json` (see Quick Start).
 
 **The findings include false positives?**
-By design: the script emits deterministic hard facts, and false-positive pruning is the LLM's job in the runbook phase (checked one by one with added context); when using the CLI alone, judge by the `severity` and `evidence` fields.
+By design: the script emits deterministic hard facts, and false-positive pruning is the LLM's job in the runbook phase (checked one by one with added context); when using the CLI alone, judge by the `severity` / `cost` fields plus the rule-specific fact fields (e.g. `lines`, `max_depth`, `methods`).
 
 **Many TODO/FIXME density findings?**
-That rule is a noise metric (per-1k-line counts only) and does not require action; it carries the lowest weight in plan ordering.
+That rule is a noise metric (per-1k-line counts plus the first marker line) and does not require action; it carries the lowest weight in plan ordering.
 
 **Old sessions won't open after upgrading the DSH host to 0.1.5.x?**
 The Session format V3 migration is irreversible and is host behavior; back up session logs before upgrading the host (see the 0.1.3 entry in [CHANGELOG.md](CHANGELOG.md)).

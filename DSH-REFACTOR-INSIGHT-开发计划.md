@@ -35,7 +35,7 @@ dsh-refactor-insight/
 ├── test/
 │   ├── fixtures/{python-app,node-app,go-app}/   # 各语言植入已知坏味道
 │   └── refactor-smell.test.mjs                 # 契约测试（spawnSync 模式照抄 arch-doc）
-├── test/dsh-compat.test.mjs                    # DSH 0.1.5-rc.2 宿主门禁
+├── test/dsh-compat.test.mjs                    # DSH 0.2.1-rc.2 宿主门禁
 ├── .github/workflows/ci.yml     # 独立脚本回归 Node 18/22 + DSH compat Node 22.19
 ├── package.json / CHANGELOG.md / README.md / LICENSE / PUBLISHING.md
 ```
@@ -59,7 +59,7 @@ dsh-refactor-insight/
 
 - **阶段 0 受理**：repo_path 必填，缺失用 ask_user 一次问清。
 - **阶段 1 扫描**：调 `arch-profile.mjs --probe/--scan/--deps/--entry`（复用，无需新代码）。
-- **阶段 2 诊断**：调 `refactor-smell.mjs <repo> --all`，输出坏味道 JSON；LLM 逐条核对误报并补充上下文。
+- **阶段 2 诊断**：调 `refactor-smell.mjs <repo>`（脚本恒跑全部规则，无 `--all` 开关），输出坏味道 JSON；LLM 逐条核对误报并补充上下文。
 - **阶段 3 排序与编排**：按 `severity × cost` 排优先级；用依赖图反推拓扑序（高耦合 / 被依赖多的模块标注「应先重构，否则冲突」）。
 - **阶段 4 产出**：严格按 `docs/refactor-plan-template.md` 生成 `REFACTOR-PLAN.md`。
 
@@ -67,7 +67,7 @@ dsh-refactor-insight/
 
 ## 6. TDD 测试计划
 
-- 每个语言 fixture 植入**已知坏味道**（如 node-app 放一个 90 行函数 + 6 层嵌套；python-app 放一个 15 方法类），断言输出**位置与数量**精确匹配。
+- 每个语言 fixture 植入**已知坏味道**（如 node-app 放一个 90 行函数 + 6 层嵌套；python-app 放一个 12 方法类），断言输出**位置与数量**精确匹配。
 - 测试文件复用 arch-doc 的 `spawnSync` CLI 契约模式（`node --test`，零依赖）。
 - 预计用例：语言探测复用 3 例 + 六规则各 2~3 例 + deps 排序 1 例，约 15 例。
 
@@ -75,8 +75,8 @@ dsh-refactor-insight/
 
 - 打包骨架照 arch-doc：`dsh.bundle.patch` + `files` 字段 + optional peerDependencies。
 - `ci.yml` 保留 Node 18/22 独立脚本回归，并增加固定 Node 22.19 的 DSH compat job。
-- `npm run test:compat` 固定 `@deepseek-ai/dsh@0.1.5-rc.2`，完成 add、dump-config 与有限时长启动验收。
-- 分发：`dsh-plugin` topic + MIT → awesome-dsh-plugin 的 data YAML（**Git & Engineering / Code Review 分类**）+ awesome-deepseek-harness 条目 + Oh-My-DSH 自动同步。
+- `npm run test:compat` 固定 `@deepseek-ai/dsh@0.2.1-rc.2`，完成 add、dump-config 与有限时长启动验收。
+- 分发：`dsh-plugin` topic + MIT → awesome-dsh-plugin 的 data YAML（upstream 实际收录为 `category: dev`，无子分类）+ awesome-deepseek-harness 条目 + Oh-My-DSH 自动同步。
 - 对外定位语：`Turn codebase smells into an executable, priority-ordered refactoring plan.`
 
 ## 8. 实施顺序（每步测试先行）
@@ -86,12 +86,22 @@ dsh-refactor-insight/
 3. [x] 函数/类级规则（2、4）+ 各语言 fixture + 测试
 4. [x] 模块耦合规则（5）+ deps 复用 + 测试
 5. [x] runbook SKILL.md + 报告模板
-6. [x] 发布（v0.1.0 首发，当前 v0.1.3）+ 列表 PR
+6. [x] 发布（v0.1.0 首发，当前 v0.2.0）+ 列表 PR
 
 ## 9. 验收标准（Definition of Ready）
 
-- [x] `node --test test/refactor-smell.test.mjs` 全部通过（25 例）
+- [x] `node --test test/refactor-smell.test.mjs` 全部通过（27 例）
 - [x] 六条规则在三种语言 fixture 上输出位置与数量精确匹配（含高耦合 deps 复用/环检测）
 - [x] runbook 可用且只读不改码
 - [x] `dsh plugin --profile web add github:duyanta123/dsh-refactor-insight` 可安装并注册技能（发布后已验证）
-- [x] CI 全绿；发布 tag（v0.1.0 首发，当前 v0.1.3）
+- [x] CI 全绿；发布 tag（v0.1.0 首发，当前 v0.2.0）
+
+## 10. v0.1.3 实际实现口径注记（2026-10-24 补）
+
+为避免后续按本计划原文核对产生误判，以下为脚本与 runbook 的实际实现口径；与 §4/§5 原文不一致处以本节为准：
+
+- **输出字段**：§4 的 `{ type, path, start_line, evidence, severity(1-5), estimated_cost }` 为设计期草案。实际每条 smell 输出 `{ rule, type, path, severity, cost }` 加规则专属事实字段：file-length 用 `lines`/`threshold`；long-function 用 `name`/`start`/`lines`/`threshold`；deep-nesting 用 `max_depth`/`threshold`/`line`；god-object 用 `name`/`start`/`methods`/`threshold`（类分支另带 `class_lines`，Go 接收者分支无 `class_lines`，且无 `lines` 字段）；todo-density 用 `line`/`todos`/`lines`/`per_1k`（`line` 为首个标记行号，2026-10 补，兑现规则 6「文件:行」定位）；high-coupling 用 `in_degree`/`out_degree`/`coupling`/`threshold`；dep_cycle 用 `size`/`members`。**无 `evidence` 字段**——证据即这些硬事实字段，语义解读、严重度与成本判断由 LLM 补充（脚本头注释同口径）。
+- **规则 4**：第二触发条件实现为「类体行数」（类起止行 `end - start + 1`）> 300，非类所在文件总行数；阈值参数 `--max-class-lines`。
+- **阶段 1**：runbook 实际只调 `--probe` 与 `--deps`（语言/栈探测 + 依赖图落盘），`--scan`/`--entry` 未纳入本插件流程（scope 取舍；arch-profile 仍保留这两种模式供手动使用）。
+- **阶段 2**：`refactor-smell.mjs` 恒跑全部六条规则，无 `--all` 开关（§5 原文的 `--all` 已删除；`arch-profile.mjs` 的 `--all` 仍有效）。
+- **fixture 与断言**：§6 的「python-app 放一个 12 方法类」为实际值（MonolithService）。测试断言自 2026-10 起全部为精确值：长函数体 99/88/88 行（python/node/go）、深嵌套 7/6/7 层、TODO 标记 1/2/2 处及首行号 7/2/5、上帝对象方法数 12/12/11、类体 38/49 行；并新增默认阈值（400 行 file-length、300 行类体 god-object）用例，不再依赖降阈值触发。

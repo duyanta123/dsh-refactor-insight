@@ -43,13 +43,16 @@ test("python: detects deep nesting + todo on core.py, no false positive on __ini
   assert.equal(json.language, "python");
   const nest = json.smells.find((s) => s.rule === "deep-nesting");
   assert.ok(nest, "应有 deep-nesting 坏味道");
-  assert.ok(nest.max_depth > 5, `max_depth 应 > 5，实际 ${nest.max_depth}`);
+  assert.equal(nest.max_depth, 7);
+  assert.equal(nest.line, 15);
   assert.equal(nest.path, "src/app/core.py");
-  assert.ok(nest.line > 0);
 
   const todo = json.smells.find((s) => s.rule === "todo-density");
   assert.ok(todo, "应有 todo 坏味道");
-  assert.ok(todo.todos >= 1);
+  assert.equal(todo.path, "src/app/core.py");
+  assert.equal(todo.line, 7);
+  assert.equal(todo.todos, 1);
+  assert.equal(todo.per_1k, 52.6);
 
   const fileLen = json.smells.find((s) => s.rule === "file-length");
   // 默认阈值 400，core.py 未超，不应有 file-length
@@ -65,20 +68,40 @@ test("deep-nesting (python): 触发规则后带正确路径与阈值", () => {
 
 test("node (brace): detects deep nesting on deep.js, shallow.js clean", () => {
   const { json } = run(join(fixtures, "node-app"));
+  assert.equal(json.language, "javascript/typescript");
   const nest = json.smells.find((s) => s.rule === "deep-nesting");
   assert.ok(nest, "应有 deep-nesting");
   assert.equal(nest.path, "src/lib/deep.js");
-  assert.ok(nest.max_depth > 5);
+  assert.equal(nest.max_depth, 6);
+  assert.equal(nest.line, 9);
   const shallow = json.smells.some((s) => s.path === "src/lib/shallow.js" && s.rule === "deep-nesting");
   assert.equal(shallow, false, "shallow.js 不应触发嵌套");
+
+  // 规则 6：deep.js 恰有 2 个标记（TODO L2 / FIXME L10），line 为首个标记行号
+  const todos = json.smells.filter((s) => s.rule === "todo-density");
+  assert.equal(todos.length, 1);
+  assert.equal(todos[0].path, "src/lib/deep.js");
+  assert.equal(todos[0].todos, 2);
+  assert.equal(todos[0].line, 2);
+  assert.equal(todos[0].per_1k, 90.9);
 });
 
 test("go (brace): detects deep nesting on main.go", () => {
   const { json } = run(join(fixtures, "go-app"));
+  assert.equal(json.language, "go");
   const nest = json.smells.find((s) => s.rule === "deep-nesting");
   assert.ok(nest, "应有 deep-nesting");
   assert.equal(nest.path, "cmd/app/main.go");
-  assert.ok(nest.max_depth > 5);
+  assert.equal(nest.max_depth, 7);
+  assert.equal(nest.line, 16);
+
+  // 规则 6：main.go 恰有 2 个标记（TODO L5 / FIXME L17）
+  const todo = json.smells.find((s) => s.rule === "todo-density");
+  assert.ok(todo, "应有 todo 坏味道");
+  assert.equal(todo.path, "cmd/app/main.go");
+  assert.equal(todo.todos, 2);
+  assert.equal(todo.line, 5);
+  assert.equal(todo.per_1k, 80);
 });
 
 test("file-length: 用低阈值触发并返回行数", () => {
@@ -87,7 +110,23 @@ test("file-length: 用低阈值触发并返回行数", () => {
   assert.ok(smells.length >= 1, "低阈值下应有 file-length 坏味道");
   const deep = smells.find((s) => s.path === "src/lib/deep.js");
   assert.ok(deep, "deep.js 应有 file-length");
-  assert.ok(deep.lines > deep.threshold, `lines(${deep.lines}) 应 > threshold(${deep.threshold})`);
+  assert.equal(deep.lines, 22);
+  assert.equal(deep.threshold, 12);
+});
+
+test("file-length: 默认 400 行阈值即可触发（tmp 生成 450 行文件）", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "refactor-filelen-"));
+  const lines = Array.from({ length: 450 }, (_, i) => `const v${i} = ${i};`);
+  writeFileSync(join(tmp, "big.js"), lines.join("\n"));
+
+  const { code, json } = run(tmp);
+  assert.equal(code, 0);
+  const fl = json.smells.find((s) => s.rule === "file-length");
+  assert.ok(fl, "默认阈值 400 应触发 file-length");
+  assert.equal(fl.type, "long_file");
+  assert.equal(fl.path, "big.js");
+  assert.equal(fl.lines, 450);
+  assert.equal(fl.threshold, 400);
 });
 
 test("exclude-dirs: 排除后对应文件不再扫描", () => {
@@ -111,8 +150,9 @@ test("long-function (python): pipeline.py 触发 >80 行,core.py 不触发", () 
   assert.ok(lf, "应有 long-function 坏味道");
   assert.equal(lf.path, "src/app/pipeline.py");
   assert.equal(lf.name, "process_pipeline");
-  assert.ok(lf.lines > 80, `pipeline.py 函数体应 >80，实际 ${lf.lines}`);
-  assert.ok(lf.start > 0);
+  assert.equal(lf.start, 4);
+  assert.equal(lf.lines, 99);
+  assert.equal(lf.threshold, 80);
   const noCore = json.smells.some((s) => s.rule === "long-function" && s.path === "src/app/core.py");
   assert.equal(noCore, false, "core.py 不应触发长函数");
 });
@@ -130,8 +170,11 @@ test("god-object (python): service.py MonolithService 方法数>10, TinyService 
   assert.ok(go, "应有 god-object 坏味道");
   assert.equal(go.path, "src/app/service.py");
   assert.equal(go.name, "MonolithService");
-  assert.ok(go.methods > 10, `MonolithService 方法数应>10，实际 ${go.methods}`);
-  assert.ok(go.start > 0);
+  assert.equal(go.methods, 12);
+  assert.equal(go.start, 4);
+  assert.equal(go.class_lines, 38);
+  assert.equal(go.threshold, 10);
+  assert.equal(go.lines, undefined, "god-object 不输出 lines 字段");
 });
 
 test("long-function (node): runner.js heavyTask >80 行,deep.js 不触发", () => {
@@ -140,7 +183,8 @@ test("long-function (node): runner.js heavyTask >80 行,deep.js 不触发", () =
   assert.ok(lf, "应有 long-function 坏味道");
   assert.equal(lf.path, "src/lib/runner.js");
   assert.equal(lf.name, "heavyTask");
-  assert.ok(lf.lines > 80, `heavyTask 函数体应>80，实际 ${lf.lines}`);
+  assert.equal(lf.start, 2);
+  assert.equal(lf.lines, 88);
 });
 
 test("god-object (node): GodService.js 方法数>10, HealthyService 不触发", () => {
@@ -149,7 +193,9 @@ test("god-object (node): GodService.js 方法数>10, HealthyService 不触发", 
   assert.ok(go, "应有 god-object 坏味道");
   assert.equal(go.path, "src/lib/GodService.js");
   assert.equal(go.name, "GodService");
-  assert.ok(go.methods > 10, `GodService 方法数应>10，实际 ${go.methods}`);
+  assert.equal(go.methods, 12);
+  assert.equal(go.start, 2);
+  assert.equal(go.class_lines, 49);
 });
 
 test("long-function (go): internal/pipeline 超长函数,main.go 不触发", () => {
@@ -157,7 +203,8 @@ test("long-function (go): internal/pipeline 超长函数,main.go 不触发", () 
   const lf = json.smells.find((s) => s.rule === "long-function");
   assert.ok(lf, "应有 long-function 坏味道");
   assert.equal(lf.name, "HeavyProcess");
-  assert.ok(lf.lines > 80, `HeavyProcess 函数体应>80，实际 ${lf.lines}`);
+  assert.equal(lf.start, 4);
+  assert.equal(lf.lines, 88);
   const noMain = json.smells.some((s) => s.rule === "long-function" && s.path === "cmd/app/main.go");
   assert.equal(noMain, false, "main.go 不应触发长函数");
 });
@@ -167,7 +214,10 @@ test("god-object (go): internal/service Manager 接收者方法数>10", () => {
   const go = json.smells.find((s) => s.rule === "god-object");
   assert.ok(go, "应有 god-object 坏味道");
   assert.equal(go.name, "Manager");
-  assert.ok(go.methods > 10, `Manager 方法数应>10，实际 ${go.methods}`);
+  assert.equal(go.methods, 11);
+  assert.equal(go.start, 6);
+  assert.equal(go.class_lines, undefined, "Go 接收者分支无 class_lines");
+  assert.equal(go.lines, undefined, "god-object 不输出 lines 字段");
 });
 
 test("god-object 阈值可覆盖 (--max-methods)", () => {
@@ -181,7 +231,25 @@ test("god-object (python): --max-class-lines 触发类体行数", () => {
   const go = json.smells.find((s) => s.rule === "god-object");
   assert.ok(go, "应有 god-object 坏味道");
   assert.equal(go.path, "src/app/service.py");
-  assert.ok(go.class_lines > 30, `class_lines 应>30，实际 ${go.class_lines}`);
+  assert.equal(go.class_lines, 38);
+});
+
+test("god-object: 默认 300 行类体阈值触发（tmp 生成 310 行大类，方法数 0）", () => {
+  const tmp = mkdtempSync(join(tmpdir(), "refactor-bigcls-"));
+  const lines = ["export class BigBlob {"];
+  for (let i = 0; i < 308; i++) lines.push(`  this.f${i} = ${i};`);
+  lines.push("}");
+  writeFileSync(join(tmp, "bigblob.js"), lines.join("\n"));
+
+  const { code, json } = run(tmp);
+  assert.equal(code, 0);
+  const go = json.smells.find((s) => s.rule === "god-object");
+  assert.ok(go, "类体行数 > 300 应在默认阈值触发 god-object");
+  assert.equal(go.path, "bigblob.js");
+  assert.equal(go.name, "BigBlob");
+  assert.equal(go.methods, 0, "方法数 0，仅类体行数分支触发");
+  assert.equal(go.class_lines, 310);
+  assert.equal(go.threshold, 300);
 });
 
 test("god-object (typescript): 识别 public/private/protected 修饰符方法", () => {

@@ -8,7 +8,7 @@
 | 项 | 值 |
 |---|---|
 | 类型 | 分析型（代码库 → 重构计划） |
-| 当前版本 | 0.1.3 |
+| 当前版本 | 0.2.0 |
 | 分发状态 | awesome-deepseek-harness 已收录 |
 | 运行时 | 零构建 ESM，`plugin/index.js` 由 harness 加载 |
 | 核心脚本 | `scripts/refactor-smell.mjs`（六规则诊断）+ `scripts/arch-profile.mjs`（复用自 arch-doc：probe/scan/deps/entry） |
@@ -24,16 +24,16 @@ dsh-refactor-insight/
 ├── docs/refactor-plan-template.md    # REFACTOR-PLAN.md 输出骨架
 ├── scripts/arch-profile.mjs      # 复用 arch-doc：probe/scan/deps/entry（零依赖）
 ├── scripts/refactor-smell.mjs    # 坏味道诊断器（六条规则，--deps-json 复用 deps 输出）
-├── test/refactor-smell.test.mjs  # node --test 契约测试（当前 25 例）
-├── test/dsh-compat.test.mjs      # DSH 0.1.5-rc.2 宿主兼容性门禁
+├── test/refactor-smell.test.mjs  # node --test 契约测试（当前 27 例）
+├── test/dsh-compat.test.mjs      # DSH 0.2.1-rc.2 宿主兼容性门禁
 └── test/fixtures/{python-app,node-app,go-app}/   # 各语言植入已知坏味道
 ```
 
 ## 3. CI 与测试门禁
 
-- **独立脚本回归**：`npm test`（=`node --test test/refactor-smell.test.mjs`），当前 **25 例**。
+- **独立脚本回归**：`npm test`（=`node --test test/refactor-smell.test.mjs`），当前 **27 例**。
 - **语法门禁**：`node --check scripts/refactor-smell.mjs`、`node --check scripts/arch-profile.mjs`、`node --check plugin/index.js`。
-- **DSH 宿主兼容**：`npm run test:compat` 固定 `@deepseek-ai/dsh@0.1.5-rc.2`，要求 Node >=22.19，执行临时 profile 的 add、dump-config 和有限时长启动。
+- **DSH 宿主兼容**：`npm run test:compat` 固定 `@deepseek-ai/dsh@0.2.1-rc.2`，要求 Node >=22.19，执行临时 profile 的 add、dump-config 和有限时长启动。
 - **GitHub Actions**：ubuntu + windows × Node 18/22 回归 + Node 22.19 compat job。
 - 覆盖点：六条规则在三种语言 fixture 上输出**位置与数量精确匹配**（含高耦合 deps 复用 / Tarjan 环检测）。
 
@@ -59,7 +59,7 @@ dsh-refactor-insight/
 - 若未来迁移到共享内核 `dsh-repo-scanner`，参照其 `docs/migration-guide.md`。
 
 ### 5.3 runbook / 模板调整
-- `skills/refactor-runbook/SKILL.md` 四阶段调整，或 `docs/refactor-plan-template.md` 章节变更：确保与脚本实际输出字段（`{ type, path, start_line, evidence, severity, estimated_cost }`）一致，避免 runbook 引用不存在的字段。
+- `skills/refactor-runbook/SKILL.md` 四阶段调整，或 `docs/refactor-plan-template.md` 章节变更：确保与脚本实际输出字段一致——每条 smell 为 `{ rule, type, path, severity, cost }` 加规则专属事实字段（file-length：`lines`/`threshold`；long-function：`name`/`start`/`lines`/`threshold`；deep-nesting：`max_depth`/`threshold`/`line`；god-object：`name`/`start`/`methods`/`threshold`，类分支另带 `class_lines`、Go 接收者分支无 `class_lines`，且无 `lines` 字段；todo-density：`line`/`todos`/`lines`/`per_1k`；high-coupling：`in_degree`/`out_degree`/`coupling`/`threshold`；dep_cycle：`size`/`members`）。**没有 `evidence` / `start_line` / `estimated_cost` 字段**（证据即上述硬事实字段，成本字段名为 `cost`），避免 runbook 引用不存在的字段。
 - **红线**：runbook 与文档必须保持「只输出计划、不自动改代码」；任何引入自动改码的改动都违反产品定位。
 
 ### 5.4 元数据与打包
@@ -74,9 +74,9 @@ dsh-refactor-insight/
 
 ## 7. 发布前清单
 
-- [ ] `npm test` 全绿（25 例）
+- [ ] `npm test` 全绿（27 例）
 - [ ] 三处 `node --check` 通过
-- [ ] `npm run test:compat` 通过（DSH 0.1.5-rc.2 / Node 22.19+）
+- [ ] `npm run test:compat` 通过（DSH 0.2.1-rc.2 / Node 22.19+）
 - [ ] `CHANGELOG.md` 已归并 `Unreleased`
 - [ ] `package.json` `version` 与 tag 一致
 - [ ] 双语 README 的 version 徽章与安装示例 tag 已同步

@@ -1,4 +1,4 @@
-"""Deep-plus-todo fixture (python). Intentionally deeply nested for refactor-smell tests."""
+"""Deep-nesting fixture (python). Intentionally deeply nested; the marker below is the only smell marker in this file."""
 
 import json
 

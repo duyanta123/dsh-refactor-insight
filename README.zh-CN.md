@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-4c1d95)](https://github.com/topics/dsh-plugin)
 [![CI](https://github.com/duyanta123/dsh-refactor-insight/actions/workflows/ci.yml/badge.svg)](https://github.com/duyanta123/dsh-refactor-insight/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.1.3-green)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.2.0-green)](CHANGELOG.md)
 
 DSH 技能插件：把代码库的坏味道转成**带定位、优先级和依赖顺序的可执行重构计划**——结构健康体检，而非 diff 审查。
 
@@ -32,14 +32,14 @@ DSH 技能插件：把代码库的坏味道转成**带定位、优先级和依�
 - **深嵌套**（默认最大缩进 / 花括号深度 > 5）
 - **上帝对象**（类方法数 > 10 或类体行数 > 300 / Go 接收者方法数）
 - **高耦合模块**（复用 `arch-profile --deps` 输出，按入度/出度识别 hub 模块 + Tarjan 环检测）
-- **TODO/FIXME 密度**（噪音指标，输出每千行计数）
+- **TODO/FIXME 密度**（噪音指标，输出每千行计数与首个标记行号）
 
 ## 安装
 
 作为 DSH 插件（推荐）：
 
 ```bash
-dsh plugin --profile web add "github:duyanta123/dsh-refactor-insight#v0.1.3"
+dsh plugin --profile web add "github:duyanta123/dsh-refactor-insight#v0.2.0"
 ```
 
 或从 npm 安装：
@@ -48,7 +48,7 @@ dsh plugin --profile web add "github:duyanta123/dsh-refactor-insight#v0.1.3"
 npm install dsh-refactor-insight
 ```
 
-兼容性分层：独立诊断脚本（`refactor-smell.mjs` / `arch-profile.mjs`）可运行在 Node.js >= 18；作为 DSH 0.1.5-rc.2 插件验证统一使用 Node.js >= 22.19。运行 `npm run test:compat` 可执行隔离 profile 的 add、dump-config 和启动 smoke test。
+兼容性分层：独立诊断脚本（`refactor-smell.mjs` / `arch-profile.mjs`）可运行在 Node.js >= 18；作为 DSH 0.2.1-rc.2 插件验证统一使用 Node.js >= 22.19。运行 `npm run test:compat` 可执行隔离 profile 的 add、dump-config 和启动 smoke test。
 
 本地开发：profile 的 package.json 加 `"dsh-refactor-insight": "file:<本地路径>/dsh-refactor-insight"`，bundles 加 `"dsh-refactor-insight"`。
 
@@ -126,10 +126,10 @@ node scripts/refactor-smell.mjs <repo_path> --deps-json deps.json
 该规则依赖依赖图输入：先跑 `node scripts/arch-profile.mjs <repo_path> --deps > deps.json`，再用 `--deps-json deps.json` 传入（见「快速开始」）。
 
 **诊断结果里混着误报？**
-设计如此：脚本只给确定性硬事实，误报精修交给 runbook 中的 LLM 阶段（逐条核对并补充上下文）；CLI 单独使用时以 `severity` 与 `evidence` 字段自行判断。
+设计如此：脚本只给确定性硬事实，误报精修交给 runbook 中的 LLM 阶段（逐条核对并补充上下文）；CLI 单独使用时以 `severity` / `cost` 与各规则的事实字段（如 `lines`、`max_depth`、`methods`）自行判断。
 
 **TODO/FIXME 密度告警很多？**
-该规则是噪音指标（仅输出每千行计数），不代表必须处理；在报告排序中权重最低。
+该规则是噪音指标（每千行计数 + 首个标记行号），不代表必须处理；在报告排序中权重最低。
 
 **升级 DSH 宿主到 0.1.5 系后旧会话打不开？**
 Session format V3 迁移不可逆，属宿主行为；升级宿主前请先备份会话日志（见 [CHANGELOG.md](CHANGELOG.md) 0.1.3 条目）。

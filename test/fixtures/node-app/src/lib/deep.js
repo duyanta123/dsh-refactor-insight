@@ -1,4 +1,4 @@
-/* Deep-plus-todo fixture (JS). Intentionally deeply nested for refactor-smell tests. */
+/* Deep-nesting fixture (JS). Intentionally deeply nested; the markers below are the only smell markers in this file. */
 // TODO: break this into tiny helpers
 
 export function process(cfg, registry) {

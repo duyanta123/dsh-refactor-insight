@@ -10,11 +10,11 @@
  *     上帝对象 god-object     类/接收者类型 方法数 > max-methods (10)
  *                            或类体行数 > max-class-lines (300)   [函数/类级]
  *     高耦合模块 high-coupling 复用 arch-profile deps（步骤 4）
- *     TODO/FIXME/HACK 密度 todo-density（噪音指标，每千行计数）
+ *     TODO/FIXME/HACK 密度 todo-density（噪音指标，每千行计数 + 首个标记行号）
  *   LLM 只在此基础上做误报精修、补上下文、定严重度与成本。
  *
  * 用法：
- *   node refactor-smell.mjs <repo_path> [--all]
+ *   node refactor-smell.mjs <repo_path>   （恒跑全部六条规则）
  *     [--max-depth N] [--max-lines N] [--max-nesting N]
  *     [--max-func-lines N] [--max-methods N] [--max-class-lines N]
  *     [--deps-json path] [--max-coupling N]
@@ -577,13 +577,17 @@ function ruleGodObject(rel, blocks) {
 
 const TODO_PAT = /(TODO|FIXME|HACK)\b/i;
 
+/** 规则 6：TODO/FIXME 密度 —— 每千行标记计数（噪音指标），line 为首个标记行号。 */
 function ruleTodoDensity(rel, text) {
-  const ext = codeExt(rel);
   const lines = text.split(/\r?\n/);
   const total = text.endsWith("\n") ? lines.length - 1 : lines.length;
   let todos = 0;
-  for (const line of lines) {
-    if (TODO_PAT.test(line)) todos++;
+  let firstLine = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (TODO_PAT.test(lines[i])) {
+      todos++;
+      if (firstLine === 0) firstLine = i + 1;
+    }
   }
   if (todos > 0) {
     const per1k = total > 0 ? Number(((todos / total) * 1000).toFixed(1)) : 0;
@@ -591,6 +595,7 @@ function ruleTodoDensity(rel, text) {
       rule: "todo-density",
       type: "todo",
       path: rel,
+      line: firstLine,
       todos,
       lines: total,
       per_1k: per1k,

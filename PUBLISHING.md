@@ -12,9 +12,9 @@
 
 ## 2. 发布前检查清单
 
-1. 运行 `npm test`（`node --test test/refactor-smell.test.mjs`，当前 25 例，全绿）。
+1. 运行 `npm test`（`node --test test/refactor-smell.test.mjs`，当前 27 例，全绿）。
 2. 运行三处语法检查：`node --check scripts/refactor-smell.mjs`、`node --check scripts/arch-profile.mjs`、`node --check plugin/index.js`。
-3. 运行 `npm run test:compat`（DSH 0.1.5-rc.2 / Node 22.19+；临时 profile add、dump-config、启动 smoke test）。
+3. 运行 `npm run test:compat`（DSH 0.2.1-rc.2 / Node 22.19+；临时 profile add、dump-config、启动 smoke test）。
 4. 运行 `npm pack --dry-run`，确认包含 `plugin/index.js`、`cordis.patch.yml`、`skills/`、`docs/`、`scripts/`、双语 `README.md`/`README.zh-CN.md`、`CHANGELOG.md`、`PUBLISHING.md`、`LICENSE`。
 5. 版本一致性核对：`package.json` version、`CHANGELOG.md` 发布段、git tag 三处一致。
 6. 版本徽章同步：双语 README 的 version 徽章与安装示例 tag 指向最新发布版本。
@@ -26,7 +26,7 @@
 - `cordis.patch.yml` 为 config-tree `- insert:` 补丁格式；harness 加载 `main`（`plugin/index.js`）。
 - `plugin/index.js` 经官方 `@deepseek-ai/dsh-skill-filesystem` 的 `FileSystemSkillProvider` 注册 `skills/` 为技能根（includeDefaultRoots: false）。
 - `skills/refactor-runbook/SKILL.md` frontmatter 必填 `name`（kebab-case）+ `description`。
-- 安装契约：`dsh plugin --profile <profile> add "github:owner/repo#ref"`；兼容基线 `@deepseek-ai/dsh@0.1.5-rc.2`（Node >= 22.19）。
+- 安装契约：`dsh plugin --profile <profile> add "github:owner/repo#ref"`；兼容基线 `@deepseek-ai/dsh@0.2.1-rc.2`（Node >= 22.19）。
 - 红线：本包只发布只读诊断技能，不包含任何自动改码工具。
 
 ## 4. 发布渠道
@@ -39,17 +39,21 @@
 
 ### npm
 
-1. `npm login`（需要 npm 账号 + 2FA）。
-2. `npm publish`（`prepublishOnly` 会先跑 `npm test`）。
+发布走 **tag 触发的自动管线**（`.github/workflows/publish.yml`，OIDC trusted publishing）：
+
+1. 前置（仅首次）：在 npm 包设置中把 GitHub 仓库 `duyanta123/dsh-refactor-insight` 配置为 trusted publisher（workflow 名 `publish.yml`，environment 留空）。
+2. push `main` 后打 tag `vX.Y.Z`（与 `package.json` version 一致）并推送 tag；workflow 自动执行 `npm run check --if-present` + `npm test` + `npm pack --dry-run`，通过后以 npm OIDC（`id-token: write`，无需 NPM_TOKEN）运行 `npm publish --access public`。支持 `workflow_dispatch` 手动触发重发。
 3. 发布后核对 `npm view dsh-refactor-insight version` 与 dist-tags。
+
+手动兜底（仅 workflow 不可用时）：`npm login`（需要 npm 账号 + 2FA）→ `npm publish`（`prepublishOnly` 会先跑 `npm test`）。
 
 ### awesome 列表收录（已收录，改描述时同步）
 
-- awesome-dsh-plugin：同步 `data/plugins/duyanta123__dsh-refactor-insight.yml`（Git & Engineering / Code Review 分类）。
+- awesome-dsh-plugin：同步 `data/plugins/duyanta123__dsh-refactor-insight.yml`（upstream 实际收录为 `category: dev`，无子分类）。
 - awesome-deepseek-harness：同步 README 条目（真实仓库 + 一句话 + 链接，en/zh 同 PR）。
 - Oh-My-DSH 自动同步。
 
 ## 5. 安装验证（发布后）
 
-1. `dsh plugin --profile web add github:duyanta123/dsh-refactor-insight` 后重启 profile，技能列表应出现 `refactor-runbook`。
+1. `dsh plugin --profile web add github:duyanta123/dsh-refactor-insight` 后重启 profile，技能列表应出现 `refactor-insight`（SKILL.md frontmatter 的 `name`；技能目录名为 `refactor-runbook`，以 frontmatter 为准）。
 2. 说「用 refactor-insight 体检 test/fixtures/node-app」，确认四阶段执行并产出 `REFACTOR-PLAN.md`。
